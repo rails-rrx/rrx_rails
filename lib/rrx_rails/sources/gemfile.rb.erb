@@ -1,0 +1,17 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+<% if gem? %>
+gemspec
+
+gem 'rrx_dev'
+<% else %>
+ruby '~> <%= ruby_version %>'
+
+gem 'rrx_api'
+
+group :development, :test do
+  gem 'rrx_dev'
+end
+<% end %>
