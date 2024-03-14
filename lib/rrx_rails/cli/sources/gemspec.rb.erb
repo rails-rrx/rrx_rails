@@ -3,7 +3,7 @@
 require_relative "lib/<%= name %>/version"
 
 Gem::Specification.new do |spec|
-  source_uri = 'REPLACE WITH SOURCE URI'
+  source_uri = 'https://github.com/your-account/<%= name %>'
   home_uri = source_uri   # Replace with home page, if there is one
 
   spec.name = "<%= name %>"
@@ -34,10 +34,8 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  <% dependencies.each do |dep| -%>
-  spec.add_dependency '<%= dep %>'
-  <% end -%>
-
-  # Add dependencies
-  # spec.add_dependency "some-gem", "version"
+  # Gem dependencies
+  <% dependencies.sort.each do |dep| -%>spec.add_dependency '<%= dep %>'
+  <% end %>
+  # spec.add_dependency "some-other-gem", "version"
 end

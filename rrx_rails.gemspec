@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
-require_relative "lib/rrx_rails/version"
+require_relative 'lib/rrx_rails/version'
 
 Gem::Specification.new do |spec|
   source_uri = 'https://github.com/rails-rrx/rrx_rails'
   home_uri = source_uri
 
-  spec.name = "rrx_rails"
+  spec.name = 'rrx_rails'
   spec.version = RrxRails::VERSION
-  spec.authors = ["Dan Drew"]
-  spec.email = ["dan.drew@hotmail.com"]
+  spec.authors = ['Dan Drew']
+  spec.email = ['dan.drew@hotmail.com']
 
-  spec.summary = "Command line for creating RRX projects"
+  spec.summary = 'Command line for creating RRX projects'
   # spec.description = "TODO: Write a longer description or delete this line."
   spec.homepage = home_uri
-  spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.1.0"
+  spec.license = 'MIT'
+  spec.required_ruby_version = '>= 3.1.0'
 
   # spec.metadata["allowed_push_host"] = "TODO: Set to your gem server 'https://example.com'"
 
-  spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = source_uri
+  spec.metadata['homepage_uri'] = spec.homepage
+  spec.metadata['source_code_uri'] = source_uri
   # spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
 
   # Specify which files should be added to the gem when it is released.
@@ -30,9 +30,14 @@ Gem::Specification.new do |spec|
       (File.expand_path(f) == __FILE__) || f.start_with?(*%w[bin/ test/ spec/ features/ .git .circleci appveyor])
     end
   end
-  spec.bindir = "exe"
+  spec.bindir = 'exe'
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   # spec.require_paths = ["lib"]
 
-  spec.add_dependency "thor"
+  spec.add_dependency 'rake'
+  spec.add_dependency 'thor'
+  spec.add_development_dependency 'rspec'
+  spec.add_development_dependency 'rspec-core'
+  spec.add_development_dependency 'rspec-parameterized'
+  spec.add_development_dependency 'rubocop'
 end

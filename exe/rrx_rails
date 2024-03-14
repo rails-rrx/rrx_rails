@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
-require 'rrx_rails/command'
+require_relative '../lib/rrx_rails/cli'
 
 Command.start

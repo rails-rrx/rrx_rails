@@ -1,0 +1,21 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+<% if gem? %>
+gemspec
+
+<%= rrx_gem_spec 'rrx_dev' %>
+<% else %>
+ruby '~> <%= ruby_version %>'
+
+<%= gem_list.join("\n") %>
+
+group :development, :test do
+<%= dev_gem_list.map { |s| "  #{s}" }.join("\n") %>
+end
+<% end %>
+
+# Please review Rails-generated Gemfile and include/delete as needed.
+# -------------------------------------------------------------------
+<%= comment(existing_gemfile) %>
