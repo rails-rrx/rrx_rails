@@ -3,4 +3,4 @@
 
 require_relative '../lib/rrx_rails/cli'
 
-Command.start
+RrxRails::Cli.start

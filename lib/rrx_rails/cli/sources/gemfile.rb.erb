@@ -2,6 +2,8 @@
 
 source "https://rubygems.org"
 
+RRX_VERSION = '<%= rrx_version %>'
+
 <% if gem? %>
 gemspec
 
@@ -18,4 +20,4 @@ end
 
 # Please review Rails-generated Gemfile and include/delete as needed.
 # -------------------------------------------------------------------
-<%= comment(existing_gemfile) %>
+<%= commented_existing_gemfile %>
