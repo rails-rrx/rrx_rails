@@ -36,6 +36,10 @@ module RrxRails
         option :storage, type: :boolean, desc: 'Include ActiveStorage support'
       end
 
+      def db!
+        option :db, type: :string, desc: 'Database type (sqlite, mysql, postgresql)', default: 'postgresql'
+      end
+
       def jobs!
         option :jobs, type: :boolean, desc: 'Include ActiveJob support'
       end
@@ -56,6 +60,7 @@ module RrxRails
     #             :project_path
 
     desc 'api APP_PATH', 'Create a new API project'
+    db!
     mail!
     storage!
     jobs!
@@ -63,6 +68,7 @@ module RrxRails
 
     def api(name)
       validate_options!
+      validate_db!
       init name, type: :api
       create_project
       inside do
@@ -102,6 +108,19 @@ module RrxRails
     RAILS_NEW_SKIP    = %w[js hotwire jbuilder rubocop test bundle action-mailbox asset-pipeline].freeze
     RAILS_NEW_OPTIONS = %w[--api].concat(RAILS_NEW_SKIP.map { |s| "--skip-#{s}" }).freeze
 
+    DB_MAP = {
+      'sqlite'       => 'sqlite3',
+      'mysql'        => 'mysql',
+      'postgresql'   => 'postgresql',
+      'pg'           => 'postgresql'
+    }.freeze
+
+    DB_GEM = {
+      'sqlite3'      => 'sqlite3',
+      'mysql'        => 'mysql2',
+      'postgresql'   => 'pg'
+    }.freeze
+
     attr_reader :app_name, :type, :dependencies, :app_path
 
     def setup_gem(name, engine: false)
@@ -131,6 +150,12 @@ module RrxRails
       return unless [force?, skip?, pretend?, quiet?].count(true) > 1
 
       raise Thor::Error, 'Only one of --force, --skip, --pretend or --quiet is allowed'
+    end
+
+    def validate_db!
+      return unless options.key?(:db)
+
+      raise Thor::Error, "Invalid --db value '#{options[:db]}'. Valid options: #{DB_MAP.keys.join(', ')}" unless DB_MAP.key?(options[:db])
     end
 
     def comment(str)
@@ -172,6 +197,7 @@ module RrxRails
       cmd << '--skip-active-storage' unless options[:storage]
       cmd << '--skip-active-job' unless options[:jobs]
       cmd << '--skip-action-cable' unless options[:sockets]
+      cmd << "--database=#{DB_MAP.fetch(options[:db], 'postgresql')}" if api?
       cmd
     end
 
@@ -279,7 +305,15 @@ module RrxRails
         rrx_gem_spec('rrx_api')
       ]
       gems << rrx_gem_spec('rrx_jobs') if options[:jobs]
+      gems << "gem '#{db_gem}'" if db_gem
       gems
+    end
+
+    def db_gem
+      return nil unless api?
+
+      db_adapter = DB_MAP.fetch(options.fetch(:db, 'postgresql'), 'postgresql')
+      DB_GEM[db_adapter]
     end
 
     def dev_gem_list
