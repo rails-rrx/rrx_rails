@@ -62,4 +62,8 @@ class OptionInfo
   add :sockets, skip_option: '--skip-action-cable'
   add :mail, skip_option: '--skip-action-mailer'
   add :jobs, skip_option: '--skip-active-job'
+
+  # --db is a string-valued option, not boolean; it does not have a skip/enable pair.
+  # Instead it is tested separately in cli_spec.rb rather than through the WHERE_ALL_OPTIONS matrix.
+  DB_VALUES = %w[postgresql sqlite mysql pg].freeze
 end
