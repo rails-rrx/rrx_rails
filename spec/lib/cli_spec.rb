@@ -115,7 +115,19 @@ RSpec.describe RrxRails::Cli do
     cmd.concat project_type != :api ? %w[rails plugin new] : %w[rails new]
     cmd << project_path.to_s
 
-    expect_cmd cmd, new_options + RrxRails::Cli::RAILS_NEW_OPTIONS
+    # api projects always include --database= (defaults to postgresql when --db not passed)
+    db_flags = project_type == :api ? ['--database=postgresql'] : []
+    expect_cmd cmd, new_options + RrxRails::Cli::RAILS_NEW_OPTIONS + db_flags
+  end
+
+  # Expects the three commands emitted by Cli#bundle_install.
+  def expect_bundle_install
+    expect_cmd %w[bundle config --delete bin]
+    expect_cmd %w[bundle install]
+    rails_bin_cmd = %w[gem exec -g rails --version]
+    rails_bin_cmd << RrxRails::RAILS_VERSION
+    rails_bin_cmd.concat %w[rails app:update:bin]
+    expect_cmd rails_bin_cmd
   end
 
   describe 'api' do
@@ -133,7 +145,7 @@ RSpec.describe RrxRails::Cli do
 
         invoke_action
         expect_rails_new
-        expect_cmd %w[bundle install]
+        expect_bundle_install
         expect_cmd %w[bundle exec rails generate rrx_api:install], runtime_options
         expect_cmd %w[bundle exec rails generate rrx_jobs:install], runtime_options if jobs?
 
@@ -155,6 +167,119 @@ RSpec.describe RrxRails::Cli do
 
   describe 'engine' do
 
+  end
+
+  describe '--db option' do
+    # Default skip flags added by rails_skip_options when no features are enabled.
+    DB_TEST_FEATURE_SKIP_FLAGS = %w[
+      --skip-action-cable
+      --skip-action-mailer
+      --skip-active-job
+      --skip-active-storage
+    ].freeze
+
+    # Use a simple set of options: no runtime flags, no feature flags
+    let(:invoke_options) { Array(defined?(db_value) ? ["--db=#{db_value}"] : []) }
+
+    # Expect the full rails new command including feature skip flags and the given db adapter.
+    def expect_rails_new_with_db(db_adapter)
+      cmd = %w[gem exec -g rails --version]
+      cmd << RrxRails::RAILS_VERSION
+      cmd.concat %w[rails new]
+      cmd << project_path.to_s
+
+      db_flag = "--database=#{db_adapter}"
+      all_flags = RrxRails::Cli::RAILS_NEW_OPTIONS + DB_TEST_FEATURE_SKIP_FLAGS + [db_flag]
+      expect_cmd cmd, all_flags
+    end
+
+    context 'with --db=postgresql (default behaviour)' do
+      let(:db_value) { 'postgresql' }
+
+      it 'passes --database=postgresql to rails new' do
+        invoke_action
+        expect_rails_new_with_db('postgresql')
+        expect_bundle_install
+        expect_cmd %w[bundle exec rails generate rrx_api:install]
+      end
+
+      it 'includes the pg gem in the Gemfile' do
+        invoke_action
+        run_cmds.clear
+        expect(gemfile_contents).to include("gem 'pg'")
+      end
+    end
+
+    context 'with --db=sqlite' do
+      let(:db_value) { 'sqlite' }
+
+      it 'passes --database=sqlite3 to rails new' do
+        invoke_action
+        expect_rails_new_with_db('sqlite3')
+        expect_bundle_install
+        expect_cmd %w[bundle exec rails generate rrx_api:install]
+      end
+
+      it 'includes the sqlite3 gem in the Gemfile' do
+        invoke_action
+        run_cmds.clear
+        expect(gemfile_contents).to include("gem 'sqlite3'")
+      end
+    end
+
+    context 'with --db=mysql' do
+      let(:db_value) { 'mysql' }
+
+      it 'passes --database=mysql to rails new' do
+        invoke_action
+        expect_rails_new_with_db('mysql')
+        expect_bundle_install
+        expect_cmd %w[bundle exec rails generate rrx_api:install]
+      end
+
+      it 'includes the mysql2 gem in the Gemfile' do
+        invoke_action
+        run_cmds.clear
+        expect(gemfile_contents).to include("gem 'mysql2'")
+      end
+    end
+
+    context 'with --db=pg (alias for postgresql)' do
+      let(:db_value) { 'pg' }
+
+      it 'passes --database=postgresql to rails new' do
+        invoke_action
+        expect_rails_new_with_db('postgresql')
+        expect_bundle_install
+        expect_cmd %w[bundle exec rails generate rrx_api:install]
+      end
+    end
+
+    context 'with an invalid --db value' do
+      let(:db_value)       { 'oracle' }
+      let(:invoke_options) { ['--db=oracle'] }
+
+      it 'raises a Thor::Error with a descriptive message' do
+        expect { invoke_action }
+          .to raise_error(Thor::Error, /Invalid --db value 'oracle'/)
+      end
+
+      it 'lists valid options in the error message' do
+        expect { invoke_action }
+          .to raise_error(Thor::Error, /sqlite.*mysql.*postgresql/)
+      end
+    end
+
+    context 'default db when --db is omitted' do
+      let(:invoke_options) { [] }
+
+      it 'defaults to --database=postgresql' do
+        invoke_action
+        expect_rails_new_with_db('postgresql')
+        expect_bundle_install
+        expect_cmd %w[bundle exec rails generate rrx_api:install]
+      end
+    end
   end
 
 end

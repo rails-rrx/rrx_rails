@@ -138,7 +138,8 @@ module RrxRails
     # @param [Symbol] type
     # @param [Array<String>] deps
     def init(app_path, type: :gem, deps: [])
-      raise Thor::Error, 'Invalid app name' if app_path !~ /^[a-z][a-z0-9_]*$/
+      basename = Pathname(app_path).basename.to_s
+      raise Thor::Error, 'Invalid app name' if basename !~ /^[a-z][a-z0-9_]*$/
 
       @app_path     = Pathname(app_path).expand_path
       @app_name     = @app_path.basename.to_s
